@@ -21,14 +21,23 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        dependencies = with pkgs; [
+
+        commonDeps = with pkgs; [
           tor
           opus-tools
           sox
           socat
           openssl
-          alsa-utils
         ];
+
+        linuxDeps = pkgs.lib.optionals pkgs.stdenv.isLinux (
+          with pkgs;
+          [
+            alsa-utils
+          ]
+        );
+
+        dependencies = commonDeps ++ linuxDeps;
       in
       {
         packages.default = pkgs.stdenv.mkDerivation {
@@ -52,6 +61,16 @@
               wrapProgram $out/bin/terminalphone \
                 --prefix PATH : ${pkgs.lib.makeBinPath dependencies}
             '';
+
+          meta = with pkgs.lib; {
+            description = "Encrypted push-to-talk voice communication over Tor hidden services.";
+            longDescription = ''
+              TerminalPhone is a single, self-contained Bash script that provides anonymous, end-to-end encrypted voice and text communication between two or more parties over the Tor network. It operates as a walkie-talkie: you record a voice message, and it is compressed, encrypted, and transmitted to the remote party as a single unit. You can also send encrypted text messages during a call. No server infrastructure, no accounts, no phone numbers. Your Tor hidden service .onion address is your identity.
+            '';
+            homepage = "https://gitlab.com/here_forawhile/terminalphone";
+            license = licenses.mit;
+            platforms = platforms.all;
+          };
         };
       }
     );
