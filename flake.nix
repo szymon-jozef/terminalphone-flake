@@ -43,7 +43,9 @@
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "terminalphone";
 
-          version = "1.1.6";
+          version = "unstable-${builtins.substring 0 8 (terminalphone.lastModifiedDate or "19700101")}-${
+            terminalphone.shortRev or "dirty"
+          }";
 
           src = terminalphone;
 
