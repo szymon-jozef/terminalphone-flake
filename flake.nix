@@ -12,6 +12,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       flake-utils,
       terminalphone,
@@ -20,7 +21,14 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        dependencies = with pkgs; [ curl ];
+        dependencies = with pkgs; [
+          tor
+          opus-tools
+          sox
+          socat
+          openssl
+          alsa-utils
+        ];
       in
       {
         packages.default = pkgs.stdenv.mkDerivation {
@@ -36,11 +44,13 @@
           installPhase = # bash
             ''
               mkdir -p $out/bin
-              cp terminalphone.sh $out/bin/
+              cp terminalphone.sh $out/bin/terminalphone
               chmod +x $out/bin/terminalphone
 
-              wrapProgram $out/bin/terminalphone.sh \
-                --prefix PATH : ${dependencies}
+              sed -i 's|$(cd "$(dirname "$0")" && pwd -P)|''${XDG_DATA_HOME:-$HOME/.local/share}/terminalphone|g' $out/bin/terminalphone
+
+              wrapProgram $out/bin/terminalphone \
+                --prefix PATH : ${pkgs.lib.makeBinPath dependencies}
             '';
         };
       }
